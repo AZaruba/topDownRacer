@@ -4,36 +4,50 @@ using UnityEngine;
 
 public class playerController : MonoBehaviour {
 
-    public Vector2 direction;
+    public Vector3 direction;
+    public float angle;
+
     public float topSpeed;
     public float acceleration;
     public float handling;
+    public float braking;
 
     private float velocity;
 
 	// Use this for initialization
 	void Start () {
         velocity = 0.0f;
+        angle = 0.0f;
+
+        direction.x = 1.0f;
+        direction.y = 0.0f;
+        direction.z = 0.0f;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        Vector3 newPosition;
-        if (velocity < topSpeed)
+        direction.x = Mathf.Sin(angle);
+        direction.z = Mathf.Cos(angle);
+        if (velocity < topSpeed && !Input.GetKey("space"))
         {
             velocity += acceleration;
         }
+        if (Input.GetKey("space") && velocity > 0.0f)
+        {
+            velocity -= braking;
+            if (velocity < 0.0f)
+                velocity = 0.0f;
+        }
 
+        if (Input.GetKey("d"))
+            angle += handling * Mathf.PI / 180;
 
-		// two control types: A and D to turn and WASD to orient, spacebar is always charge
-        // We should use one master update function that grabs each player controller object's input
-        //    - so if SPACEBAR is held (or A or whatever) we should make a point
-        //    - if turning input is held, make adjustments
-        // this function simply grabs all player inputs and sends them to the master update function
+        if (Input.GetKey("a"))
+            angle -= handling * Mathf.PI / 180;
 
-        // this class should hold the controller input which this player is taking from (so it can change over time)
-        // it should also contain all other control types (menu control, etc)
-        // perhaps, as a player controller, the current physics applications (buffs, stats, etc) should also be here?
-        // i.e. have a class that contains EVERYTHING corresponding to one human player
+        direction.x *= velocity;
+        direction.z *= velocity;
+
+        transform.Translate(direction * Time.deltaTime, Space.World);
 	}
 }
