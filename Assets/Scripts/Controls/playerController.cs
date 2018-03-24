@@ -5,8 +5,7 @@ using UnityEngine;
 public class playerController : MonoBehaviour
 {
 
-	public Vector3 direction;
-	public Vector3 faceDirection;
+    public Vector3 direction;
     public float angle;
 	public float turn;
 
@@ -19,6 +18,7 @@ public class playerController : MonoBehaviour
 
     private float velocity;
 	private bool drifting;
+    private TimeKeeper clock;
 
 	// Use this for initialization
 	void Start ()
@@ -31,56 +31,72 @@ public class playerController : MonoBehaviour
         direction.x = 1.0f;
         direction.y = 0.0f;
         direction.z = 0.0f;
+
+        clock = gameObject.GetComponent(typeof(TimeKeeper)) as TimeKeeper;
 	}
+
+    void accelerate()
+    {
+        if (velocity < topSpeed && !Input.GetKey("space"))
+            velocity += acceleration * Time.deltaTime;
+        else if (velocity > topSpeed)
+        {
+            velocity -= acceleration * 3 * Time.deltaTime;
+        }
+        if (Input.GetKey("space"))
+        {
+            velocity -= braking * (topSpeed / velocity) * Time.deltaTime;
+            if (velocity < 0.0f)
+                velocity = 0.0f;
+        }
+    }
+
+    void handle()
+    {
+        if (Input.GetKey("d"))
+        {
+            transform.Rotate(0, handling * Time.deltaTime * 10, 0);
+            angle += turn * Mathf.PI / 180 * Time.deltaTime * 10;
+        }
+
+        if (Input.GetKey("a"))
+        {
+            transform.Rotate(0, -1 * handling * Time.deltaTime * 10, 0);
+            angle -= turn * Mathf.PI / 180 * Time.deltaTime * 10;
+        }
+        direction.x = Mathf.Sin(angle) * velocity;
+        direction.z = Mathf.Cos(angle) * velocity;
+    }
+
+    void drift()
+    {
+        if (Input.GetKeyDown("space"))
+        {
+            turn = driftHandling;
+            drifting = true;
+            clock.startTimer();
+        }
+        else if (!Input.GetKey("space") && drifting == true)
+        {
+            turn = handling;
+            float boostRatio = 0.0f;
+            if (clock.isActive())
+                boostRatio = clock.stopTimer() / clock.getMaxTime();
+            else
+                boostRatio = clock.stopTimer();
+            float eulerReturn = transform.rotation.eulerAngles.y;
+            angle = eulerReturn * Mathf.PI / 180;
+            velocity += boost * boostRatio;
+            drifting = false;
+        }
+    }
 	
 	// Update is called once per frame
 	void Update ()
 	{
-        direction.x = Mathf.Sin(angle);
-        direction.z = Mathf.Cos(angle);
-        if (velocity < topSpeed && !Input.GetKey("space"))
-        {
-            velocity += acceleration;
-        }
-		if (velocity > topSpeed)
-		{
-			velocity -= acceleration*2;
-		}
-		if (Input.GetKey ("space")) {
-			velocity -= braking;
-			if (velocity < 0.0f)
-				velocity = 0.0f;
-			turn = driftHandling;
-			drifting = true;
-		}
-		else
-		{
-			turn = handling;
-			if (drifting == true)
-			{
-				// get the y-rotation of the object and apply it to the direction vector
-				float eulerReturn = transform.rotation.eulerAngles.y;
-				direction.x = Mathf.Sin(eulerReturn);
-				direction.z = Mathf.Cos(eulerReturn);
-				velocity = boost; // add a function of time to this
-				drifting = false;
-			}
-		}
-
-		if (Input.GetKey ("d"))
-		{
-			transform.Rotate (0, handling*Time.deltaTime*10, 0);
-			angle += turn * Mathf.PI / 180 * Time.deltaTime * 10;
-		}
-
-		if (Input.GetKey ("a"))
-		{
-			transform.Rotate (0, -1*handling*Time.deltaTime*10, 0);
-			angle -= turn * Mathf.PI / 180 * Time.deltaTime * 10;
-		}
-
-        direction.x *= velocity;
-        direction.z *= velocity;
+        accelerate();
+        drift();
+        handle();
 
         transform.Translate(direction * Time.deltaTime, Space.World);
 	}
