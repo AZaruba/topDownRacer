@@ -12,6 +12,7 @@ public class playerController : MonoBehaviour
     public float topSpeed;
 	public float boost;
     public float acceleration;
+    public float boostDeceleration;
     public float handling;
 	public float driftHandling;
     public float braking;
@@ -41,7 +42,7 @@ public class playerController : MonoBehaviour
             velocity += acceleration * Time.deltaTime;
         else if (velocity > topSpeed)
         {
-            velocity -= acceleration * 3 * Time.deltaTime;
+            velocity -= boostDeceleration * Time.deltaTime;
         }
         if (Input.GetKey("space"))
         {
