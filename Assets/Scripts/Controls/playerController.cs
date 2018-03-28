@@ -20,6 +20,7 @@ public class playerController : MonoBehaviour
     private float velocity;
 	private bool drifting;
     private TimeKeeper clock;
+    private PlayerCollision playerCollider;
 
 	// Use this for initialization
 	void Start ()
@@ -34,6 +35,7 @@ public class playerController : MonoBehaviour
         direction.z = 0.0f;
 
         clock = gameObject.GetComponent(typeof(TimeKeeper)) as TimeKeeper;
+        playerCollider = gameObject.GetComponent(typeof(PlayerCollision)) as PlayerCollision;
 	}
 
     void accelerate()
@@ -65,6 +67,8 @@ public class playerController : MonoBehaviour
             transform.Rotate(0, -1 * handling * Time.deltaTime * 10, 0);
             angle -= turn * Mathf.PI / 180 * Time.deltaTime * 10;
         }
+
+        // TODO: handling vertical translation
         direction.x = Mathf.Sin(angle) * velocity;
         direction.z = Mathf.Cos(angle) * velocity;
     }
@@ -91,6 +95,20 @@ public class playerController : MonoBehaviour
             drifting = false;
         }
     }
+
+    void checkForCollision()
+    {
+        BoxCollider colliderInfo = gameObject.GetComponent<BoxCollider>();
+        if (colliderInfo == null)
+            return;
+
+        float colliderDist = (colliderInfo.bounds.size.z) / 2;
+        Vector3 resultDirection = playerCollider.wallCollision(transform.position, direction.normalized, colliderDist, velocity);
+
+        // TODO: handling vertical translation
+        direction.x = resultDirection.x;
+        direction.z = resultDirection.z;
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -98,6 +116,7 @@ public class playerController : MonoBehaviour
         accelerate();
         drift();
         handle();
+        checkForCollision();
 
         transform.Translate(direction * Time.deltaTime, Space.World);
 	}
