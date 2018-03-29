@@ -102,12 +102,19 @@ public class playerController : MonoBehaviour
         if (colliderInfo == null)
             return;
 
-        float colliderDist = (colliderInfo.bounds.size.z) / 2;
-        Vector3 resultDirection = playerCollider.wallCollision(transform.position, direction.normalized, colliderDist, velocity);
+        Quaternion orientation = transform.rotation;
 
-        // TODO: handling vertical translation
+        Vector3 dimensions = (colliderInfo.size) / 2;
+        Debug.Log(dimensions);
+        float colliderDist = dimensions.z;
+        Vector3 resultDirection = playerCollider.wallCollision(transform.position, direction.normalized, dimensions, orientation, colliderDist, velocity);
+        Vector3 resultOrientation = playerCollider.getNewDirection();
+
+        // float newAngle = Mathf.Acos(Vector3.Dot(direction.normalized, resultOrientation.normalized));
+
         direction.x = resultDirection.x;
         direction.z = resultDirection.z;
+        // transform.Rotate(0, newAngle, 0);
     }
 	
 	// Update is called once per frame

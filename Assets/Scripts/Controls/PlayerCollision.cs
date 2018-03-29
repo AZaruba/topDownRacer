@@ -7,12 +7,18 @@ public class PlayerCollision : MonoBehaviour {
     public int collisionMask;
     private int colMask;
     private RaycastHit wallInfo;
+    private Vector3 newDirection;
 
 	void Start () {
         colMask = 1 << collisionMask; // use a public value for naming the layer, but a private value to ensure it WORKS
 	}
 
-	public Vector3 wallCollision(Vector3 pos, Vector3 dir, float distanceFromCenter, float velocity)
+    public Vector3 getNewDirection()
+    {
+        return newDirection;
+    }
+
+	public Vector3 wallCollision(Vector3 pos, Vector3 dir, Vector3 dimensions, Quaternion orientation, float distanceFromCenter, float velocity)
     {
 
         /* Given a position defined as DEAD CENTER of the object
@@ -21,13 +27,16 @@ public class PlayerCollision : MonoBehaviour {
          * 
          * So when we translate pos by this vector, it will be the point coming out of the front of the box 
          */
-        Vector3 boxEdgePoint = dir * distanceFromCenter;
+        //Vector3 boxEdgePoint = dir * distanceFromCenter;
 
-        pos += boxEdgePoint;
+        //pos += boxEdgePoint;
 
-        if (Physics.Raycast(pos, dir, out wallInfo, 1/*,colMask*/))
+        dimensions.z = 0.001f;
+        Debug.Log(distanceFromCenter);
+        if (Physics.BoxCast(pos,dimensions,dir,out wallInfo,orientation,1,colMask))
         {
-            dir += wallInfo.normal.normalized; // the result of this addition is the new direction
+            dir += wallInfo.normal.normalized;
+            newDirection = Vector3.Cross(wallInfo.normal.normalized, Vector3.up.normalized);
         }
 
         return dir * velocity;
