@@ -69,8 +69,8 @@ public class playerController : MonoBehaviour
         }
 
         // TODO: handling vertical translation
-        direction.x = Mathf.Sin(angle) * velocity;
-        direction.z = Mathf.Cos(angle) * velocity;
+		direction.x = Mathf.Sin(angle); // * velocity;
+		direction.z = Mathf.Cos (angle); // * velocity;
     }
 
     void drift()
@@ -105,16 +105,20 @@ public class playerController : MonoBehaviour
         Quaternion orientation = transform.rotation;
 
         Vector3 dimensions = (colliderInfo.size) / 2;
-        Debug.Log(dimensions);
         float colliderDist = dimensions.z;
-        Vector3 resultDirection = playerCollider.wallCollision(transform.position, direction.normalized, dimensions, orientation, colliderDist, velocity);
-        Vector3 resultOrientation = playerCollider.getNewDirection();
+        playerCollider.wallCollision(transform.position, direction.normalized, dimensions, orientation, colliderDist, velocity);
+		Vector3 resultDirection = playerCollider.getNewDirection (direction.normalized);
 
-        // float newAngle = Mathf.Acos(Vector3.Dot(direction.normalized, resultOrientation.normalized));
+		float newAngle = Vector3.Dot (direction.normalized, resultDirection.normalized);
+		if (newAngle < -1.0f)
+			newAngle = -1.0f;
+		else if (newAngle > 1.0f)
+			newAngle = 1.0f;
 
-        direction.x = resultDirection.x;
-        direction.z = resultDirection.z;
-        // transform.Rotate(0, newAngle, 0);
+		newAngle = Mathf.Acos (newAngle);
+		angle += newAngle;
+		transform.Rotate (0,newAngle * 180 / Mathf.PI,0);
+
     }
 	
 	// Update is called once per frame
@@ -125,6 +129,6 @@ public class playerController : MonoBehaviour
         handle();
         checkForCollision();
 
-        transform.Translate(direction * Time.deltaTime, Space.World);
+		transform.Translate(direction.normalized * velocity * Time.deltaTime, Space.World);
 	}
 }
