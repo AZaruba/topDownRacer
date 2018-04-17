@@ -19,9 +19,11 @@ public class PlayerCollision : MonoBehaviour {
     {
 		// TODO: figure out an elegant solution for deciding WHICH normal we're going with, this doesn't work
 		if (collided) {
-			Vector3 isUp = Vector3.Cross (oldDir.normalized, newDirection.normalized);
+			Vector3 isUp = Vector3.Cross (wallInfo.normal.normalized, oldDir.normalized);
 			if (isUp.normalized.y == Vector3.up.y)
 				return newDirection;
+			else if (isUp == Vector3.zero)
+				return Vector3.zero;
 			else
 				return newDirection * -1;
 		}
@@ -32,20 +34,26 @@ public class PlayerCollision : MonoBehaviour {
 		// but for some reason it only wants to move up the X-axis
     }
 
-	public void wallCollision(Vector3 pos, Vector3 dir, Vector3 dimensions, Quaternion orientation, float distanceFromCenter, float velocity)
+	public void wallCollision(Vector3 pos, Vector3 dir, Vector3 dimensions, Quaternion orientation, float distanceFromCenter)
     {
 		collided = false;
 
-        dimensions.z = 0.001f;
-		if (Physics.BoxCast(pos,dimensions,dir,out wallInfo,orientation,1,colMask))
+        dimensions.z = 0.01f;
+		if (Physics.BoxCast(pos,dimensions,dir,out wallInfo,orientation,0.2f,colMask))
         {
             dir += wallInfo.normal.normalized;
 			newDirection = Vector3.Cross(Vector3.up, wallInfo.normal.normalized);
 			collided = true;
-			Debug.Log (dir.normalized);
         }
-			
     }
+
+	public Vector3 getPoint()
+	{
+		if (collided)
+		    return wallInfo.point;
+		else
+			return Vector3.zero;
+	}
 
 	void Update () {
 		
