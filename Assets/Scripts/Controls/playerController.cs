@@ -109,6 +109,7 @@ public class playerController : MonoBehaviour
         playerCollider.wallCollision(transform.position, direction.normalized, dimensions, orientation, colliderDist);
 		Vector3 resultDirection = playerCollider.getNewDirection (direction.normalized);
 
+		/*
 		float newAngle = 0;
 		if (resultDirection == Vector3.zero)
 			velocity = -1.0f;
@@ -120,20 +121,25 @@ public class playerController : MonoBehaviour
 				newAngle = 1.0f;
 			newAngle = Mathf.Acos (newAngle);
 		}
+		*/
 
 		// newAngle = Mathf.Acos (newAngle);
 
-		if (Vector3.Cross (direction.normalized, resultDirection.normalized).normalized.y == Vector3.down.y)
-			newAngle *= -1;
-		angle += newAngle;
-		transform.Rotate (0,newAngle * 180 / Mathf.PI,0);
+		// if (Vector3.Cross (direction.normalized, resultDirection.normalized).normalized.y == Vector3.down.y)
+		// 	newAngle *= -1;
+		// angle += newAngle;
+		// transform.Rotate (0,newAngle * 180 / Mathf.PI,0);
 
+		Vector3 rotatePoint = playerCollider.getPoint (transform.position);
+		if (playerCollider.getCollided ()) {
+			velocity = playerCollider.getResultVelocity (transform.rotation.eulerAngles);
+			transform.RotateAround (rotatePoint, Vector3.up, 1);
+			angle+= Mathf.PI/180;
+			drawPoint ();
+		}
     }
 
-	Vector3 updateCollision(BoxCollider colliderInfo)
-	{
 
-	}
 	
 	// Update is called once per frame
 	void Update ()
@@ -141,9 +147,17 @@ public class playerController : MonoBehaviour
         accelerate();
         drift();
         handle();
-
+		checkForCollision();
 
 		transform.Translate(direction.normalized * velocity * Time.deltaTime, Space.World);
-		checkForCollision();
+	}
+
+	/*
+	 * DEBUG FUNCTIONS: only call these functions when debugging collision quirks
+	 */
+
+	void drawPoint()
+	{
+		Debug.DrawRay (transform.position, Vector3.up*2);
 	}
 }

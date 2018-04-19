@@ -28,34 +28,51 @@ public class PlayerCollision : MonoBehaviour {
 				return newDirection * -1;
 		}
 		return oldDir.normalized;
-
-		// Why, though? Taking the cross product of our old direction and new direction should provide
-		// either up or down (the game is designed with the assumption that all colliders are flat walls)
-		// but for some reason it only wants to move up the X-axis
     }
+
+	public float getResultVelocity(Vector3 originalDir)
+	{
+		return Vector3.Magnitude(originalDir.normalized + wallInfo.normal.normalized);
+	}
+
+	public bool getCollided()
+	{
+		return collided;
+	}
 
 	public void wallCollision(Vector3 pos, Vector3 dir, Vector3 dimensions, Quaternion orientation, float distanceFromCenter)
     {
 		collided = false;
 
-        dimensions.z = 0.01f;
-		if (Physics.BoxCast(pos,dimensions,dir,out wallInfo,orientation,0.2f,colMask))
+        //dimensions.z = 0.01f;
+		if (Physics.BoxCast(pos,dimensions,dir,out wallInfo,orientation,1,colMask))
         {
             dir += wallInfo.normal.normalized;
 			newDirection = Vector3.Cross(Vector3.up, wallInfo.normal.normalized);
 			collided = true;
         }
+
+		drawPoint ();
     }
 
-	public Vector3 getPoint()
+	public Vector3 getPoint(Vector3 currentPosition)
 	{
 		if (collided)
 		    return wallInfo.point;
 		else
-			return Vector3.zero;
+			return currentPosition;
 	}
 
 	void Update () {
 		
+	}
+
+	/*
+	 * DEBUG FUNCTIONS: only call these functions when debugging collision quirks
+	 */
+
+	void drawPoint()
+	{
+		Debug.DrawRay (wallInfo.point, wallInfo.normal.normalized);
 	}
 }
