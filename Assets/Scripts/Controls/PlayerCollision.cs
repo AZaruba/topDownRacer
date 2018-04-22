@@ -32,6 +32,8 @@ public class PlayerCollision : MonoBehaviour {
 
 	public float getResultVelocity(Vector3 originalDir)
 	{
+        if (Mathf.Abs(Vector3.Angle(wallInfo.normal.normalized, originalDir)) < 90.0f)
+            return 0.0f;
 		return Vector3.Magnitude(originalDir.normalized + wallInfo.normal.normalized);
 	}
 

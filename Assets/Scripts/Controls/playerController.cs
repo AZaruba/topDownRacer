@@ -19,6 +19,7 @@ public class playerController : MonoBehaviour
 
     private float velocity;
 	private bool drifting;
+    private bool colliding;
     private TimeKeeper clock;
     private PlayerCollision playerCollider;
 
@@ -29,6 +30,7 @@ public class playerController : MonoBehaviour
         angle = 0.0f;
 		turn = handling;
 		drifting = false;
+        colliding = false;
 
         direction.x = 1.0f;
         direction.y = 0.0f;
@@ -59,13 +61,15 @@ public class playerController : MonoBehaviour
         if (Input.GetKey("d"))
         {
             transform.Rotate(0, handling * Time.deltaTime * 10, 0);
-            angle += turn * Mathf.PI / 180 * Time.deltaTime * 10;
+            if (!colliding)
+                angle += turn * Mathf.PI / 180 * Time.deltaTime * 10;
         }
 
         if (Input.GetKey("a"))
         {
             transform.Rotate(0, -1 * handling * Time.deltaTime * 10, 0);
-            angle -= turn * Mathf.PI / 180 * Time.deltaTime * 10;
+            if (!colliding)
+                angle -= turn * Mathf.PI / 180 * Time.deltaTime * 10;
         }
 
         // TODO: handling vertical translation
@@ -91,7 +95,7 @@ public class playerController : MonoBehaviour
                 boostRatio = clock.stopTimer();
             float eulerReturn = transform.rotation.eulerAngles.y;
             angle = eulerReturn * Mathf.PI / 180;
-            velocity += boost * boostRatio;
+            velocity += boost * boostRatio * Time.deltaTime;
             drifting = false;
         }
     }
@@ -104,12 +108,11 @@ public class playerController : MonoBehaviour
 
         Quaternion orientation = transform.rotation;
 
-        Vector3 dimensions = (colliderInfo.size) / 2;
+        Vector3 dimensions = (colliderInfo.size) / 4;
         float colliderDist = dimensions.z;
         playerCollider.wallCollision(transform.position, direction.normalized, dimensions, orientation, colliderDist);
 		Vector3 resultDirection = playerCollider.getNewDirection (direction.normalized);
 
-		/*
 		float newAngle = 0;
 		if (resultDirection == Vector3.zero)
 			velocity = -1.0f;
@@ -121,22 +124,30 @@ public class playerController : MonoBehaviour
 				newAngle = 1.0f;
 			newAngle = Mathf.Acos (newAngle);
 		}
-		*/
 
 		// newAngle = Mathf.Acos (newAngle);
 
-		// if (Vector3.Cross (direction.normalized, resultDirection.normalized).normalized.y == Vector3.down.y)
-		// 	newAngle *= -1;
-		// angle += newAngle;
+		if (Vector3.Cross (direction.normalized, resultDirection.normalized).normalized.y == Vector3.down.y)
+		    newAngle *= -1;
+		angle += newAngle;
 		// transform.Rotate (0,newAngle * 180 / Mathf.PI,0);
 
 		Vector3 rotatePoint = playerCollider.getPoint (transform.position);
 		if (playerCollider.getCollided ()) {
+            colliding = true;
 			velocity = playerCollider.getResultVelocity (transform.rotation.eulerAngles);
-			transform.RotateAround (rotatePoint, Vector3.up, 1);
-			angle+= Mathf.PI/180;
+			// transform.RotateAround (rotatePoint, Vector3.up, 1);
+			// angle+= Mathf.PI/180;
 			drawPoint ();
 		}
+        else if (colliding)
+        {
+            float newDir = transform.rotation.eulerAngles.y;
+            Debug.Log(newDir);
+            direction.x = Mathf.Sin(newDir);
+            direction.z = Mathf.Cos(newDir);
+            colliding = false;
+        }
     }
 
 
@@ -148,6 +159,8 @@ public class playerController : MonoBehaviour
         drift();
         handle();
 		checkForCollision();
+        if (playerCollider.getCollided())
+            Debug.Log(direction.normalized);
 
 		transform.Translate(direction.normalized * velocity * Time.deltaTime, Space.World);
 	}
